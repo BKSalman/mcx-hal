@@ -6,7 +6,7 @@ use crate::{
         self,
         lpuart::{regs::STAT, Instance},
     },
-    port::lpuart::{prepare, Pin, RXD, TXD},
+    port::lpuart::{UartRxPin, UartTxPin},
     syscon::{PeripheralCC, PeripheralRST},
 };
 
@@ -112,8 +112,8 @@ impl BaudRate {
 /// LPUART Pins, only contains TXD and RXD
 pub struct Pins<TX, RX>
 where
-    TX: Pin<Signal = TXD>,
-    RX: Pin<Signal = RXD, Module = TX::Module>,
+    TX: UartTxPin,
+    RX: UartRxPin<Module = TX::Module>,
 {
     pub tx: TX,
     pub rx: RX,
@@ -127,8 +127,8 @@ pub struct LpUart<const N: u8, PINS> {
 
 impl<const N: u8, TX, RX> LpUart<N, Pins<TX, RX>>
 where
-    TX: Pin<Signal = TXD, Module = Const<N>>,
-    RX: Pin<Signal = RXD, Module = Const<N>>,
+    TX: UartTxPin<Module = Const<N>>,
+    RX: UartRxPin<Module = Const<N>>,
 {
     /// Create a new LPUART instance with given TX and RX pins
     pub fn new(mut lpuart: Instance<N>, mut pins: Pins<TX, RX>) -> Self
@@ -138,8 +138,20 @@ where
         lpuart.reset();
         lpuart.enable_clock(true);
 
-        prepare(&mut pins.tx);
-        prepare(&mut pins.rx);
+        #[cfg(feature = "mcxn0")]
+        {
+            let instance =
+                unsafe { mcx_pac::Instance::<mcx_pac::lp_flexcomm::LP_FLEXCOMM, N>::instance() };
+            instance.regs().PSELID().modify(|psel| {
+                psel.set_PERSEL(1);
+            });
+        }
+
+        pins.tx.analog(false);
+        pins.tx.set_mux(TX::MUX);
+
+        pins.rx.analog(false);
+        pins.rx.set_mux(RX::MUX);
 
         let mut ret = Self { lpuart, pins };
         ret.reset();

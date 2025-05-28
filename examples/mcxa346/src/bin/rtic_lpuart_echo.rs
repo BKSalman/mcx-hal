@@ -3,7 +3,7 @@
 
 use panic_halt as _;
 
-#[rtic::app(device = mcx_pac, peripherals = false)]
+#[rtic::app(device = mcx_hal::pac, peripherals = false)]
 mod app {
     use eio06::Write;
     use mcx_hal::prelude::*;
@@ -58,7 +58,7 @@ mod app {
         let (sender, receiver) = make_channel!(u8, 32);
 
         lpuart2.enable_interrupts(LpUartInterrupt::RECEIVER);
-        unsafe { cortex_m::peripheral::NVIC::unmask(interrupt::LPUART2) }
+        unsafe { cortex_m::peripheral::NVIC::unmask(Interrupt::LPUART2) }
 
         lpuart2_tx::spawn().unwrap();
 

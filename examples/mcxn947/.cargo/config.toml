@@ -1,0 +1,5 @@
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip MCXN947"
+
+[build]
+target = "thumbv8m.main-none-eabihf"
