@@ -1,3 +1,4 @@
+#[cfg(feature = "mcxa")]
 macro_rules! generate_syscon_divider {
     ($name: ident, $reg_name: ident, $comment:expr) => {
         #[doc = $comment]
@@ -30,11 +31,14 @@ pub fn setup_ahbclk_divider(divider: u8) {
     while reg.read().UNSTAB() {}
 }
 
+#[cfg(feature = "mcxa2")]
 generate_syscon_divider!(
     setup_fro_lf_divider,
     FROLFDIV,
     "Setup FRO_LF divider.\nThis clock is divided from SIRC_12M_CLK."
 );
+
+#[cfg(feature = "mcxa2")]
 generate_syscon_divider!(
     setup_fro_hf_divider,
     FROHFDIV,

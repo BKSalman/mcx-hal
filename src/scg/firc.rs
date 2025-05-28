@@ -1,5 +1,6 @@
 //！Fast Internal Reference Clock
 
+#[cfg(any(feature = "mcxa0", feature = "mcxa2", feature = "mcxn0"))]
 use crate::{pac::scg::SCG, scg::SCGError};
 
 #[cfg(any(feature = "mcxa0", feature = "mcxa1"))]
@@ -24,6 +25,18 @@ pub enum FIRC {
     FIRC180M = 7,
 }
 
+#[cfg(feature = "mcxn0")]
+#[derive(Debug, Clone, Copy, Default)]
+#[repr(u8)]
+pub enum FIRC {
+    // MCXNX4XRM 34.7.1.14
+    // 0b - 48 MHz FIRC clock selected
+    // 1b - 144 MHz FIRC clock selected
+    #[default]
+    FIRC48M = 0,
+    FIRC144M = 1,
+}
+
 impl FIRC {
     pub const fn freq(&self) -> u32 {
         #[cfg(any(feature = "mcxa0", feature = "mcxa1"))]
@@ -40,6 +53,11 @@ impl FIRC {
             Self::FIRC90M => 90_000_000,
             Self::FIRC180M => 180_000_000,
         }
+        #[cfg(feature = "mcxn0")]
+        match self {
+            Self::FIRC48M => 48_000_000,
+            Self::FIRC144M => 144_000_000,
+        }
     }
 
     pub(crate) fn enable(
@@ -49,7 +67,14 @@ impl FIRC {
         fclk_en: bool,
         sclk_en: bool,
     ) -> Result<(), SCGError> {
+        #[cfg(feature = "mcxa")]
         scg.FIRCCFG().write(|r| r.set_FREQ_SEL(firc as u8));
+        #[cfg(feature = "mcxn0")]
+        scg.FIRCCFG().write(|r| {
+            // 0b/false - 48 MHz FIRC clock selected
+            // 1b/true - 144 MHz FIRC clock selected
+            r.set_RANGE(firc as u8 == 1)
+        });
 
         scg.FIRCCSR().modify(|r| r.set_LK(false));
         scg.FIRCCSR().modify(|r| {

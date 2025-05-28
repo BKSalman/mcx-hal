@@ -3,7 +3,7 @@
 
 use panic_halt as _;
 
-#[rtic::app(device = mcx_pac, peripherals = false)]
+#[rtic::app(device = mcx_hal::pac, peripherals = false)]
 mod app {
     use mcx_hal::{gpio::Input, port::Port, prelude::*};
     use rtic_monotonics::{rtic_time::embedded_hal_async::delay::DelayNs, systick_monotonic};
@@ -17,9 +17,9 @@ mod app {
     struct Local {
         btn: Input<PortPin<1, 7>>,
 
-        led_r: Output<PortPin<3, 18>>,
-        led_g: Output<PortPin<3, 19>>,
-        led_b: Output<PortPin<3, 21>>,
+        led_r: Output<PortPin<3, 0>>,
+        led_g: Output<PortPin<3, 1>>,
+        led_b: Output<PortPin<3, 6>>,
     }
 
     #[init]
@@ -31,9 +31,9 @@ mod app {
         let mut gpio1 = GPIO::new(unsafe { pac::gpio::GPIO1::instance() });
         let mut gpio3 = GPIO::new(unsafe { pac::gpio::GPIO3::instance() });
 
-        let led_r = gpio3.output(port3.p18);
-        let led_g = gpio3.output(port3.p19);
-        let led_b = gpio3.output(port3.p21);
+        let led_r = gpio3.output(port3.p0);
+        let led_g = gpio3.output(port3.p1);
+        let led_b = gpio3.output(port3.p6);
 
         led_r.set();
         led_g.set();
@@ -43,7 +43,7 @@ mod app {
         btn.mut_pin().floating();
         btn.mut_pin().analog(false);
         btn.set_interrupt_config(GPIOIRQConfig::InterruptFallingEdge);
-        unsafe { cortex_m::peripheral::NVIC::unmask(interrupt::GPIO1) }
+        unsafe { cortex_m::peripheral::NVIC::unmask(Interrupt::GPIO1) }
 
         blink::spawn().unwrap();
 
@@ -64,7 +64,7 @@ mod app {
         let led_b = ctx.local.led_b;
 
         btn.clear_interrupt_flag();
-        led_b.toggle().unwrap();
+        led_b.toggle();
     }
 
     #[task(local = [led_r, led_g])]
@@ -74,8 +74,8 @@ mod app {
 
         loop {
             Mono.delay_ms(500).await;
-            led_r.toggle().unwrap();
-            led_g.toggle().unwrap();
+            led_r.toggle();
+            led_g.toggle();
         }
     }
 }
