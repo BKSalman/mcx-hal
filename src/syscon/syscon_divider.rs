@@ -8,6 +8,7 @@ macro_rules! generate_syscon_divider {
                     reg.write(|r| {
                         r.set_DIV(divider);
                         r.set_HALT(false);
+                        #[cfg(feature = "mcxa2")]
                         r.set_RESET(false);
                     });
                     while reg.read().UNSTAB() {}
@@ -15,6 +16,7 @@ macro_rules! generate_syscon_divider {
                 None => reg.write(|r| {
                     r.set_DIV(0);
                     r.set_HALT(true);
+                    #[cfg(feature = "mcxa2")]
                     r.set_RESET(false);
                 }),
             }
@@ -30,11 +32,14 @@ pub fn setup_ahbclk_divider(divider: u8) {
     while reg.read().UNSTAB() {}
 }
 
+#[cfg(feature = "mcxa2")]
 generate_syscon_divider!(
     setup_fro_lf_divider,
     FROLFDIV,
     "Setup FRO_LF divider.\nThis clock is divided from SIRC_12M_CLK."
 );
+
+#[cfg(any(feature = "mcxa2", feature = "mcxn0"))]
 generate_syscon_divider!(
     setup_fro_hf_divider,
     FROHFDIV,

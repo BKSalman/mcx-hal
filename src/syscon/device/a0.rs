@@ -1,7 +1,7 @@
 use crate::pac::*;
-use crate::syscon::periph_en_define;
+use crate::syscon::periph_syscon;
 
-periph_en_define! {
+periph_syscon! {
     (periph: inputmux::INPUTMUX0, 0,  0, hRST: true, hCC: true, hACC: true)
     (periph: i3c::I3C0,           0,  1, hRST: true, hCC: true, hACC: true)
     (periph: ctimer::CTIMER0,     0,  2, hRST: true, hCC: true, hACC: true)

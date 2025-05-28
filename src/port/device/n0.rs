@@ -306,40 +306,8 @@ impl Port4 {
         }
     }
 }
-pub struct Port5 {
-    _port: crate::pac::port::PORT5,
-    pub p0: PortPin<5, 0>,
-    pub p1: PortPin<5, 1>,
-    pub p2: PortPin<5, 2>,
-    pub p3: PortPin<5, 3>,
-    pub p4: PortPin<5, 4>,
-    pub p5: PortPin<5, 5>,
-    pub p6: PortPin<5, 6>,
-    pub p7: PortPin<5, 7>,
-    pub p8: PortPin<5, 8>,
-    pub p9: PortPin<5, 9>,
-}
-impl private::Sealed for Port5 {}
-unsafe impl Send for Port5 {}
-unsafe impl Sync for Port5 {}
-impl Port5 {
-    pub fn new(mut port: crate::pac::port::PORT5) -> Self {
-        port.reset();
-        port.enable_clock(true);
-        Self {
-            _port: port,
-            p0: unsafe { PortPin::<5, 0>::new() },
-            p1: unsafe { PortPin::<5, 1>::new() },
-            p2: unsafe { PortPin::<5, 2>::new() },
-            p3: unsafe { PortPin::<5, 3>::new() },
-            p4: unsafe { PortPin::<5, 4>::new() },
-            p5: unsafe { PortPin::<5, 5>::new() },
-            p6: unsafe { PortPin::<5, 6>::new() },
-            p7: unsafe { PortPin::<5, 7>::new() },
-            p8: unsafe { PortPin::<5, 8>::new() },
-            p9: unsafe { PortPin::<5, 9>::new() },
-        }
-    }
-}
 scg!(pin: PortPin<1, 30>, module: U0, signal: XTAL48M);
 scg!(pin: PortPin<1, 31>, module: U0, signal: EXTAL48M);
+
+lpuart!(pin: PortPin<1, 8>, module: U4, signal: RXD, mux: 2);
+lpuart!(pin: PortPin<1, 9>, module: U4, signal: TXD, mux: 2);

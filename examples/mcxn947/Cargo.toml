@@ -1,0 +1,13 @@
+[package]
+name = "mcxn947"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+mcx-hal = { path = "../../", features = ["rt", "mcxn947_core0"] }
+
+cortex-m = { version = "0.7", features = ["critical-section-single-core"]}
+cortex-m-rt = "0.7"
+
+panic-halt = "1"
+eio06 = { package = "embedded-io", version = "0.6" }

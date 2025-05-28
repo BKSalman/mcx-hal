@@ -94,6 +94,9 @@ pub mod device {
         } else if #[cfg(feature = "mcxa2")] {
             mod a2;
             pub use a2::*;
+        } else if #[cfg(feature = "mcxn0")] {
+            mod n0;
+            pub use n0::*;
         }
     }
 }

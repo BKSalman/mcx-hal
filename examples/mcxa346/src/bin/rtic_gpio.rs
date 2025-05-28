@@ -3,7 +3,7 @@
 
 use panic_halt as _;
 
-#[rtic::app(device = mcx_pac, peripherals = false)]
+#[rtic::app(device = mcx_hal::pac, peripherals = false)]
 mod app {
     use mcx_hal::{gpio::Input, port::Port, prelude::*};
     use rtic_monotonics::{rtic_time::embedded_hal_async::delay::DelayNs, systick_monotonic};
@@ -43,7 +43,7 @@ mod app {
         btn.mut_pin().floating();
         btn.mut_pin().analog(false);
         btn.set_interrupt_config(GPIOIRQConfig::InterruptFallingEdge);
-        unsafe { cortex_m::peripheral::NVIC::unmask(interrupt::GPIO1) }
+        unsafe { cortex_m::peripheral::NVIC::unmask(Interrupt::GPIO1) }
 
         blink::spawn().unwrap();
 
@@ -64,7 +64,7 @@ mod app {
         let led_b = ctx.local.led_b;
 
         btn.clear_interrupt_flag();
-        led_b.toggle().unwrap();
+        led_b.toggle();
     }
 
     #[task(local = [led_r, led_g])]
@@ -74,8 +74,8 @@ mod app {
 
         loop {
             Mono.delay_ms(500).await;
-            led_r.toggle().unwrap();
-            led_g.toggle().unwrap();
+            led_r.toggle();
+            led_g.toggle();
         }
     }
 }
