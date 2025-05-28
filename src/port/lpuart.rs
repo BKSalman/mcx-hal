@@ -1,32 +1,28 @@
 //! LPUART pin define
 
-use crate::{port::Port, private};
+use crate::port::Port;
 
-pub trait Pin: Port {
+pub trait UartRxPin: Port {
     type Module;
-    type Signal;
     const MUX: u8;
 }
 
-pub trait Signal {}
-impl Signal for TXD {}
-impl Signal for RXD {}
-
-pub enum TXD {}
-pub enum RXD {}
-impl private::Sealed for TXD {}
-impl private::Sealed for RXD {}
-
-pub fn prepare<P: Pin>(p: &mut P) {
-    p.analog(false);
-    p.set_mux(P::MUX);
+pub trait UartTxPin: Port {
+    type Module;
+    const MUX: u8;
 }
 
+// TODO: allow same pins to be used with multiple UART modules
 macro_rules! lpuart {
-    (pin: $pin:ty, module: $module:ident, signal: $signal:ident, mux: $mux:expr) => {
-        impl crate::port::lpuart::Pin for $pin {
+    (pin: $pin:ty, module: $module:ident, signal: RXD, mux: $mux:expr) => {
+        impl crate::port::lpuart::UartRxPin for $pin {
             type Module = crate::consts::$module;
-            type Signal = crate::port::lpuart::$signal;
+            const MUX: u8 = $mux;
+        }
+    };
+    (pin: $pin:ty, module: $module:ident, signal: TXD, mux: $mux:expr) => {
+        impl crate::port::lpuart::UartTxPin for $pin {
+            type Module = crate::consts::$module;
             const MUX: u8 = $mux;
         }
     };

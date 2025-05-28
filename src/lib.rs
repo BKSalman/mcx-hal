@@ -46,7 +46,7 @@ mod private {
 }
 
 pub mod prelude {
-    pub use crate::pac::{self, interrupt};
+    pub use crate::pac::{self, Interrupt};
 
     pub use crate::gpio::*;
 

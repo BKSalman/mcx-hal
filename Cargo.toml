@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mcx-pac = { version = "0.1.6", default-features = false }
+mcx-pac = { git = "https://github.com/mcx-rs/mcx-pac", default-features = false }
 cortex-m = { version = "0.7" }
 cortex-m-rt = { version = "0.7" }
 # embedded-hal = "1"
@@ -40,6 +40,8 @@ mcxa = ["device"]
 mcxa0 = ["mcxa", "_cs_single_core"]
 mcxa1 = ["mcxa", "_cs_single_core"]
 mcxa2 = ["mcxa", "_cs_single_core"]
+
+mcxn947_core0 = ["mcx-pac/mcxn947_cm33_core0", "mcxn0"]
 
 mcxn = ["device"]
 mcxn0 = ["mcxn"]

@@ -7,6 +7,7 @@ use core::{
 };
 
 use cortex_m::interrupt::Mutex;
+use mcx_hal::pac::interrupt;
 use mcx_hal::prelude::*;
 use panic_halt as _;
 
@@ -22,13 +23,13 @@ fn main() -> ! {
     let mut gpio1 = GPIO::new(unsafe { pac::gpio::GPIO1::instance() });
     let mut gpio3 = GPIO::new(unsafe { pac::gpio::GPIO3::instance() });
 
-    let led = gpio3.output(port3.p18);
+    let led = gpio3.output(port3.p1);
     let mut btn = gpio1.input(port1.p7);
 
     btn.mut_pin().floating();
     btn.mut_pin().analog(false);
     btn.set_interrupt_config(GPIOIRQConfig::InterruptFallingEdge);
-    unsafe { cortex_m::peripheral::NVIC::unmask(interrupt::GPIO1) }
+    unsafe { cortex_m::peripheral::NVIC::unmask(Interrupt::GPIO1) }
     unsafe { cortex_m::interrupt::enable() }
 
     cortex_m::interrupt::free(|cs| BTN.borrow(cs).borrow_mut().replace(btn));

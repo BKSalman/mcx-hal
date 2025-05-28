@@ -14,7 +14,7 @@ pub trait PeripheralRST: private::Sealed {
     fn assert_reset(&mut self, release: bool);
     fn reset(&mut self) {
         self.assert_reset(true);
-        self.assert_reset(true);
+        self.assert_reset(false);
     }
 }
 pub trait PeripheralCC: private::Sealed {
@@ -95,7 +95,60 @@ macro_rules! periph_en_define {
 
 #[cfg(feature = "mcxn")]
 macro_rules! periph_en_define {
-    ( $( ($(virt: $virt:ident)? $(periph: $periph:ty)?, $n:expr, $bit:expr $(,hRST: $hRST:expr)? $(,hCC: $hCC:expr)? $(,hACC: $hACC:expr)?) )+ ) => {};
+    ( $( ($(virt: $virt:ident)? $(periph: $periph:ty)?, instance: $instance:expr, bit: $bit:expr $(,hRST: $hRST:expr)? $(,hCC: $hCC:expr)?) )+ ) => {
+        periph_en_define!(@virtual_peripherals $($($virt)?)+);
+        $($(
+            impl crate::private::Sealed for $periph {}
+        )?)+
+
+        pub use virtual_peripherals::*;
+        $(
+            periph_en_define!(@impl_rst periph_en_define!(@name $(virt: $virt)? $(periph: $periph)?), $instance, $bit $(,hRST: $hRST)?);
+            periph_en_define!(@impl_cc  periph_en_define!(@name $(virt: $virt)? $(periph: $periph)?), $instance, $bit $(,hCC: $hCC)?);
+        )+
+    };
+    (@name $(virt: $virt:ident)? $(periph: $periph:ty)?) => {
+        $($virt)?
+        $($periph)?
+    };
+    (@virtual_peripherals $($virt:ident)*) => {
+        pub mod virtual_peripherals {
+            $(
+                pub struct $virt;
+                impl crate::private::Sealed for $virt {}
+            )*
+        }
+    };
+    (@impl_rst $name:ty, $instance:expr, $bit:expr) => {};
+    (@impl_rst $name:ty, $instance:expr, $bit:expr, hRST: $hRST:expr) => {
+        impl crate::syscon::PeripheralRST for $name {
+            #[inline(always)]
+            fn assert_reset(&mut self, release: bool) {
+                let reg = unsafe {
+                    let ptr = crate::pac::syscon::ADDRESSES[0] as *mut u8;
+                    // offset to the set/clear register
+                    let offset = if release { 0x20usize } else { 0x40usize };
+                    crate::pac::common::Reg::<u32, crate::pac::common::W>::from_ptr(ptr.add(0x100usize + $instance * 0x4usize + offset) as _)
+                };
+                reg.write(|r| *r = 1 << $bit);
+            }
+        }
+    };
+    (@impl_cc $name:ty, $instance:expr, $bit:expr) => {};
+    (@impl_cc $name:ty, $instance:expr, $bit:expr, hCC: $hCC:expr) => {
+        impl crate::syscon::PeripheralCC for $name {
+            #[inline(always)]
+            fn enable_clock(&mut self, enable: bool) {
+                let reg = unsafe {
+                    let ptr = crate::pac::syscon::ADDRESSES[0] as *mut u8;
+                    // offset to the set/clear register
+                    let offset = if enable { 0x20usize } else { 0x40usize };
+                    crate::pac::common::Reg::<u32, crate::pac::common::W>::from_ptr(ptr.add(0x0200usize + $instance * 0x4usize + offset) as _)
+                };
+                reg.write(|r| *r = 1 << $bit);
+            }
+        }
+    };
 }
 
 pub(crate) use periph_en_define;
@@ -121,5 +174,6 @@ cfg_if::cfg_if! {
 #[cfg_attr(feature = "mcxa0", path = "device/a0.rs")]
 #[cfg_attr(feature = "mcxa1", path = "device/a1.rs")]
 #[cfg_attr(feature = "mcxa2", path = "device/a2.rs")]
+#[cfg_attr(feature = "mcxn0", path = "device/n0.rs")]
 mod device;
 pub use device::*;
